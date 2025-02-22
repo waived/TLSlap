@@ -30,3 +30,6 @@ ANONYMITY:
     also can refuse SOCKS4 proxification altogether.
 
 If you encountered any bugs during the use of this script, please leave a comment.
+
+UPDATE:
+    Timeout feature added to handle latency in proxified/non-proxified floods.
